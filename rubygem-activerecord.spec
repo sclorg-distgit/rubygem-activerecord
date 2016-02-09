@@ -7,16 +7,16 @@
 Summary: Implements the ActiveRecord pattern for ORM
 Name: %{?scl_prefix}rubygem-%{gem_name}
 Epoch: 1
-Version: 4.2.5
-Release: 3%{?dist}
+Version: 4.2.5.1
+Release: 1%{?dist}
 Group: Development/Languages
 License: MIT
 URL: http://www.rubyonrails.org
 Source0: http://rubygems.org/downloads/activerecord-%{version}.gem
 # git clone http://github.com/rails/rails.git
 # cd rails/activerecord/
-# git checkout v4.2.5
-# tar czvf activerecord-4.2.5-tests.tgz test/
+# git checkout v4.2.5.1
+# tar czvf activerecord-4.2.5.1-tests.tgz test/
 Source1: activerecord-%{version}-tests.tgz
 Requires: %{?scl_prefix_ruby}ruby(release)
 Requires: %{?scl_prefix_ruby}ruby(rubygems)
@@ -131,6 +131,9 @@ popd
 %doc %{gem_instdir}/examples
 
 %changelog
+* Mon Feb 08 2016 Dominic Cleal <dcleal@redhat.com> 4.2.5.1-1
+- Update Rails to 4.2.5.1
+
 * Fri Jan 22 2016 Dominic Cleal <dcleal@redhat.com> 4.2.5-3
 - Ignore up to one test error
 
