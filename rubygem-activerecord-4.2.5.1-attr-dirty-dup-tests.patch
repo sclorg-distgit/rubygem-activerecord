@@ -1,0 +1,40 @@
+From 1a2797b482286e21afd1068ce595479b0c52fc2c Mon Sep 17 00:00:00 2001
+From: Dominic Cleal <dcleal@redhat.com>
+Date: Fri, 12 Feb 2016 16:01:03 +0000
+Subject: [PATCH] Prevent dirty checks from affecting original after #dup
+
+When a record is cloned via #dup, the `@original_raw_attributes` cache
+must also be reset, else the same hash is referenced on both the
+original and newly cloned object.  Further changes to the clone cause
+attributes to show as dirty on the original.
+
+This seems to have been introduced with in-place dirty checking in 4.2,
+and master is unaffected due to refactorings and better encapsulation.
+---
+ activerecord/test/cases/dirty_test.rb | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/activerecord/test/cases/dirty_test.rb b/activerecord/test/cases/dirty_test.rb
+index aed58e0..13c5785 100644
+--- a/activerecord/test/cases/dirty_test.rb
++++ b/activerecord/test/cases/dirty_test.rb
+@@ -757,6 +757,16 @@ class DirtyTest < ActiveRecord::TestCase
+     assert_equal "arr", pirate.catchphrase
+   end
+ 
++  test "cloning and modifying an object in-place only registers changes on the new object" do
++    pirate = Pirate.create!(catchphrase: "arrrr")
++    assert_equal({}, pirate.changed_attributes)
++    pirate_clone = pirate.dup
++    assert_equal({"catchphrase" => nil}, pirate_clone.changed_attributes)
++    pirate_clone.catchphrase = "arrrr matey!"
++    assert_equal({}, pirate.changed_attributes)
++    assert_equal({"catchphrase" => nil}, pirate_clone.changed_attributes)
++  end
++
+   private
+     def with_partial_writes(klass, on = true)
+       old = klass.partial_writes?
+-- 
+2.4.3
+

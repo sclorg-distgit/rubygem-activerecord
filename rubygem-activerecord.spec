@@ -8,7 +8,7 @@ Summary: Implements the ActiveRecord pattern for ORM
 Name: %{?scl_prefix}rubygem-%{gem_name}
 Epoch: 1
 Version: 4.2.5.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 Group: Development/Languages
 License: MIT
 URL: http://www.rubyonrails.org
@@ -18,6 +18,8 @@ Source0: http://rubygems.org/downloads/activerecord-%{version}.gem
 # git checkout v4.2.5.1
 # tar czvf activerecord-4.2.5.1-tests.tgz test/
 Source1: activerecord-%{version}-tests.tgz
+Patch0: rubygem-activerecord-4.2.5.1-attr-dirty-dup.patch
+Patch1: rubygem-activerecord-4.2.5.1-attr-dirty-dup-tests.patch
 Requires: %{?scl_prefix_ruby}ruby(release)
 Requires: %{?scl_prefix_ruby}ruby(rubygems)
 Requires: %{?scl_prefix}rubygem(activemodel) = %{version}
@@ -65,6 +67,8 @@ gem unpack %{SOURCE0}
 gem spec %{SOURCE0} -l --ruby > %{gem_name}.gemspec
 %{?scl:EOF}
 
+%patch0 -p2
+
 %build
 %{?scl:scl enable %{scl} - << \EOF}
 gem build %{gem_name}.gemspec
@@ -81,6 +85,7 @@ cp -a .%{gem_dir}/* %{buildroot}%{gem_dir}
 pushd .%{gem_instdir}
 
 tar xzvf %{SOURCE1}
+patch -p2 < %{PATCH1}
 
 # load_path is not available, remove its require.
 sed -i '1,2d' test/cases/helper.rb
@@ -131,6 +136,9 @@ popd
 %doc %{gem_instdir}/examples
 
 %changelog
+* Thu Mar 10 2016 Dominic Cleal <dominic@cleal.org> 4.2.5.1-2
+- Fix attribute dirty checks after #dup
+
 * Mon Feb 08 2016 Dominic Cleal <dcleal@redhat.com> 4.2.5.1-1
 - Update Rails to 4.2.5.1
 

@@ -1,0 +1,31 @@
+From 1a2797b482286e21afd1068ce595479b0c52fc2c Mon Sep 17 00:00:00 2001
+From: Dominic Cleal <dcleal@redhat.com>
+Date: Fri, 12 Feb 2016 16:01:03 +0000
+Subject: [PATCH] Prevent dirty checks from affecting original after #dup
+
+When a record is cloned via #dup, the `@original_raw_attributes` cache
+must also be reset, else the same hash is referenced on both the
+original and newly cloned object.  Further changes to the clone cause
+attributes to show as dirty on the original.
+
+This seems to have been introduced with in-place dirty checking in 4.2,
+and master is unaffected due to refactorings and better encapsulation.
+---
+ activerecord/lib/active_record/attribute_methods/dirty.rb | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/activerecord/lib/active_record/attribute_methods/dirty.rb b/activerecord/lib/active_record/attribute_methods/dirty.rb
+index d7854a3..4bb831b 100644
+--- a/activerecord/lib/active_record/attribute_methods/dirty.rb
++++ b/activerecord/lib/active_record/attribute_methods/dirty.rb
+@@ -40,6 +40,7 @@ module ActiveRecord
+ 
+       def initialize_dup(other) # :nodoc:
+         super
++        @original_raw_attributes = nil
+         calculate_changes_from_defaults
+       end
+ 
+-- 
+2.4.3
+
