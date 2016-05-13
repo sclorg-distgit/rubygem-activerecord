@@ -8,7 +8,7 @@ Summary: Implements the ActiveRecord pattern for ORM
 Name: %{?scl_prefix}rubygem-%{gem_name}
 Epoch: 1
 Version: 4.2.6
-Release: 1%{?dist}
+Release: 2%{?dist}
 Group: Development/Languages
 License: MIT
 URL: http://www.rubyonrails.org
@@ -75,6 +75,7 @@ mkdir -p %{buildroot}%{gem_dir}
 cp -a .%{gem_dir}/* %{buildroot}%{gem_dir}
 
 %check
+%{?scl:scl enable %{scl} - << \EOF}
 pushd .%{gem_instdir}
 
 tar xzvf %{SOURCE1}
@@ -85,17 +86,10 @@ sed -i '1,2d' test/cases/helper.rb
 # Fail with any test
 set -e
 
-# 1 failure/bug
-# public_send in combination with method_missing raises NameError instead of NoMethodError
-# https://github.com/rails/rails/issues/19297
-# https://bugs.ruby-lang.org/issues/10969
-#
 # There is one more or N failures when requiring the tests in the following order.
 # Running them in complete isolation solves the problem but takes too much time.
-# So accepting up to 5 failures.
-%{?scl:scl enable %{scl} - << \EOF}
-# Additional failing tests, investigate.
-ruby -I.:test:lib <<EOR | egrep "(1|2|3|4|5|6|7|8) failures"
+# So accepting up to 2 failures.
+ruby -I.:test:lib <<EOR | egrep 'assertions, (0|1|2) failures, (0|1) errors, 2 skips'
   test_files = Dir.glob( "test/cases/**/*_test.rb" )
   test_files.reject! { |x| x =~ %r|/adapters/| }
 
@@ -111,9 +105,9 @@ ruby -I.:test:lib <<EOR | egrep "(1|2|3|4|5|6|7|8) failures"
 
   test_files.sort.each { |f| require f }
 EOR
-%{?scl:EOF}
 
 popd
+%{?scl:EOF}
 
 %files
 %dir %{gem_instdir}
@@ -129,6 +123,10 @@ popd
 %doc %{gem_instdir}/examples
 
 %changelog
+* Fri Apr 08 2016 Pavel Valena <pvalena@redhat.com> - 1:4.2.6-2
+- Make build fail on tests failure
+- Lower accepted test failures to 2
+
 * Mon Apr 04 2016 Pavel Valena <pvalena@redhat.com> - 1:4.2.6-1
 - Update to 4.2.6
 
