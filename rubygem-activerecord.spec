@@ -9,7 +9,7 @@ Summary: Implements the ActiveRecord pattern for ORM
 Name: %{?scl_prefix}rubygem-%{gem_name}
 Epoch: 1
 Version: 3.2.8
-Release: 8.2%{?dist}
+Release: 11%{?dist}
 Group: Development/Languages
 License: MIT
 URL: http://www.rubyonrails.org
@@ -39,9 +39,14 @@ Patch3: rubygem-activerecord-3.2.13-CVE-2013-1854-attribute_symbols-test.patch
 Patch4: rubygem-activerecord-3.2.9-rhbz963295-nulls-first-last.patch
 
 # CVE-2014-3482
-# https://bugzilla.redhat.com/show_bug.cgi?id=1115332
+# https://bugzilla.redhat.com/show_bug.cgi?id=1115334
 Patch5: rubygem-activerecord-3.2.19-CVE-2014-3482-bit-string.patch
 Patch6: rubygem-activerecord-3.2.19-CVE-2014-3482-bit-string-test.patch
+
+# Fix CVE-2015-7577 Nested attributes rejection proc bypass
+# https://bugzilla.redhat.com/show_bug.cgi?id=1301957
+Patch7: rubygem-activerecord-3.2.22.1-CVE-2015-7577-fix-nested-attributes-rejection-proc-bypass.patch
+Patch8: rubygem-activerecord-3.2.22.1-CVE-2015-7577-fix-nested-attributes-rejection-proc-bypass-tests.patch
 
 Requires: %{?scl_prefix}ruby(abi) = %{rubyabi}
 Requires: %{?scl_prefix}ruby(rubygems)
@@ -92,6 +97,7 @@ pushd .%{gem_instdir}
 %patch2 -p2
 %patch4 -p2
 %patch5 -p2
+%patch7 -p2
 popd
 
 %build
@@ -107,6 +113,7 @@ tar xzvf %{SOURCE1}
 
 cat %{PATCH3} | patch -p2
 cat %{PATCH6} | patch -p2
+cat %{PATCH8} | patch -p2
 
 # load_path is not available, remove its require.
 sed -i '1,2d' test/cases/helper.rb
@@ -146,13 +153,17 @@ popd
 %doc %{gem_instdir}/examples
 
 %changelog
-* Thu Jul 03 2014 Josef Stribny <jstribny@redhat.com> - 1:3.2.8-8.2
-- Make the patch #5 apply cleanly
-  - Related: rhbz#1115332
+* Tue Feb 23 2016 Vít Ondruch <vondruch@redhat.com> - 1:3.2.8-11
+- Nested attributes rejection proc bypass
+  Resolves: rhbz#1306282
 
-* Thu Jul 03 2014 Josef Stribny <jstribny@redhat.com> - 1:3.2.8-8.1
+* Tue Nov 04 2014 Josef Stribny <jstribny@redhat.com> - 1:3.2.8-10
+- Make the patch #5 apply cleanly
+  - Related: rhbz#1115334
+
+* Thu Jul 03 2014 Josef Stribny <jstribny@redhat.com> - 1:3.2.8-9
 - Fix for CVE-2014-3482
-  - Resolves: rhbz#1115332
+  - Resolves: rhbz#1115334
 
 * Wed Jun 12 2013 Vít Ondruch <vondruch@redhat.com> - 1:3.2.8-8
 - Make the patch4 cleanly apply.
