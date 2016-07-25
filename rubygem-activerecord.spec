@@ -8,7 +8,7 @@ Summary: Implements the ActiveRecord pattern for ORM
 Name: %{?scl_prefix}rubygem-%{gem_name}
 Epoch: 1
 Version: 4.0.2
-Release: 2.3%{?dist}
+Release: 6%{?dist}
 Group: Development/Languages
 License: MIT
 URL: http://www.rubyonrails.org
@@ -26,6 +26,11 @@ Patch1: rubygem-activerecord-4.0.7-CVE-2014-3483-range.patch
 Patch2: rubygem-activerecord-4.0.8-CVE-2014-3483-range-regression.patch
 # Fix for Fix CVE-2014-3514: vulnerability in the create_with
 Patch3: rubygem-activerecord-4.1.5-CVE-2014-3514-create_with.patch
+# Fix CVE-2015-7577 Nested attributes rejection proc bypass
+# https://bugzilla.redhat.com/show_bug.cgi?id=1301957
+Patch4: rubygem-activerecord-4.1.14.1-CVE-2015-7577-fix-nested-attributes-rejection-proc-bypass.patch
+Patch5: rubygem-activerecord-4.1.14.1-CVE-2015-7577-fix-nested-attributes-rejection-proc-bypass-tests.patch
+
 Requires: %{?scl_prefix_ruby}ruby(release)
 Requires: %{?scl_prefix_ruby}ruby(rubygems)
 Requires: %{?scl_prefix}rubygem(activesupport) = %{version}
@@ -76,6 +81,8 @@ tar xzvf %{SOURCE1}
 %patch1 -p2
 %patch2 -p2
 %patch3 -p1
+%patch4 -p2
+%patch5 -p2
 popd
 
 %build
@@ -124,17 +131,21 @@ popd
 %{gem_instdir}/test
 
 %changelog
-* Fri Aug 22 2014 Josef Stribny <jstribny@redhat.com> - 1:4.0.2-2.3
+* Tue Feb 23 2016 Vít Ondruch <vondruch@redhat.com> - 1:4.0.2-6
+- Nested attributes rejection proc bypass
+  Resolves: rhbz#1306284
+
+* Fri Aug 22 2014 Josef Stribny <jstribny@redhat.com> - 1:4.0.2-5
 - Fix CVE-2014-3514: vulnerability in the create_with
-  - Resolves: rhbz#1133530
+  - Resolves: rhbz#1133531
 
-* Wed Jul 09 2014 Josef Stribny <jstribny@redhat.com> - 1:4.0.2-2.2
+* Wed Jul 09 2014 Josef Stribny <jstribny@redhat.com> - 1:4.0.2-4
 - Fix CVE-2014-3483 regression
-  - Related: rhbz#1115335
+  - Related: rhbz#1115336
 
-* Thu Jul 03 2014 Josef Stribny <jstribny@redhat.com> - 1:4.0.2-2.1
+* Thu Jul 03 2014 Josef Stribny <jstribny@redhat.com> - 1:4.0.2-3
 - Fix CVE-2014-3483
-  - Resolves: rhbz#1115335
+  - Resolves: rhbz#1115336
 
 * Tue Feb 18 2014 Josef Stribny <jstribny@redhat.com> - 1:4.0.2-2
 - Fix CVE-2014-0080: PostgreSQL array data injection vulnerability
