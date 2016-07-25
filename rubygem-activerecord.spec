@@ -8,7 +8,7 @@ Summary: Implements the ActiveRecord pattern for ORM
 Name: %{?scl_prefix}rubygem-%{gem_name}
 Epoch: 1
 Version: 4.1.5
-Release: 1%{?dist}
+Release: 2%{?dist}
 Group: Development/Languages
 License: MIT
 URL: http://www.rubyonrails.org
@@ -18,6 +18,15 @@ Source0: http://rubygems.org/downloads/activerecord-%{version}.gem
 # git checkout v4.1,5
 # tar czvf activerecord-4.1.5-tests.tgz test/
 Source1: activerecord-%{version}-tests.tgz
+
+# Fix CVE-2016-0753 Possible Input Validation Circumvention
+# https://bugzilla.redhat.com/show_bug.cgi?id=1301973
+Patch0: rubygem-activerecord-4.1.14.1-CVE-2016-0753-fix-possible-input-validation-circumvention.patch
+# Fix CVE-2015-7577 Nested attributes rejection proc bypass
+# https://bugzilla.redhat.com/show_bug.cgi?id=1301957
+Patch1: rubygem-activerecord-4.1.14.1-CVE-2015-7577-fix-nested-attributes-rejection-proc-bypass.patch
+Patch2: rubygem-activerecord-4.1.14.1-CVE-2015-7577-fix-nested-attributes-rejection-proc-bypass-tests.patch
+
 Requires: %{?scl_prefix_ruby}ruby(release)
 Requires: %{?scl_prefix_ruby}ruby(rubygems)
 Requires: %{?scl_prefix}rubygem(activesupport) = %{version}
@@ -60,6 +69,9 @@ Documentation for %{pkg_name}
 
 pushd .%{gem_instdir}
 tar xzvf %{SOURCE1}
+%patch0 -p2
+%patch1 -p2
+%patch2 -p2
 popd
 
 %build
@@ -111,6 +123,12 @@ popd
 %{gem_instdir}/test
 
 %changelog
+* Wed Feb 10 2016 Pavel Valena <pvalena@redhat.com> - 1:4.1.5-2
+- Fix possible input validation circumvention - rhbz#1301973
+  - Resolves: CVE-2016-0753
+- Nested attributes rejection proc bypass - rhbz#1301957
+  - Resolves: CVE-2015-7577
+
 * Thu Jan 22 2015 Josef Stribny <jstribny@redhat.com> - 1:4.1.5-1
 - Update to 4.1.5
 
