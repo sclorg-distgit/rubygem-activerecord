@@ -8,7 +8,7 @@ Summary: Implements the ActiveRecord pattern for ORM
 Name: %{?scl_prefix}rubygem-%{gem_name}
 Epoch: 1
 Version: 4.2.5.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 Group: Development/Languages
 License: MIT
 URL: http://www.rubyonrails.org
@@ -20,6 +20,7 @@ Source0: http://rubygems.org/downloads/activerecord-%{version}.gem
 Source1: activerecord-%{version}-tests.tgz
 Patch0: rubygem-activerecord-4.2.5.1-attr-dirty-dup.patch
 Patch1: rubygem-activerecord-4.2.5.1-attr-dirty-dup-tests.patch
+Patch2: 4-2-unsafe-query-generation.patch
 Requires: %{?scl_prefix_ruby}ruby(release)
 Requires: %{?scl_prefix_ruby}ruby(rubygems)
 Requires: %{?scl_prefix}rubygem(activemodel) = %{version}
@@ -68,6 +69,7 @@ gem spec %{SOURCE0} -l --ruby > %{gem_name}.gemspec
 %{?scl:EOF}
 
 %patch0 -p2
+%patch2 -p2
 
 %build
 %{?scl:scl enable %{scl} - << \EOF}
@@ -136,6 +138,9 @@ popd
 %doc %{gem_instdir}/examples
 
 %changelog
+* Fri Aug 12 2016 Dominic Cleal <dominic@cleal.org> 4.2.5.1-3
+- Patch for CVE-2016-6317
+
 * Thu Mar 10 2016 Dominic Cleal <dominic@cleal.org> 4.2.5.1-2
 - Fix attribute dirty checks after #dup
 

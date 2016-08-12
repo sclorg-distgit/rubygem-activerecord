@@ -1,0 +1,30 @@
+From 04dd9752926e41b3e1d7b6a357f1f4381aaeece9 Mon Sep 17 00:00:00 2001
+From: Aaron Patterson <aaron.patterson@gmail.com>
+Date: Thu, 4 Aug 2016 11:15:03 -0700
+Subject: [PATCH 2/2] Fix unsafe query generation risk.
+
+Redo of CVE-2012-2660, CVE-2012-2694 and CVE-2013-0155
+
+CVE-2016-6317
+---
+ .../dispatch/request/json_params_parsing_test.rb   | 43 ++++++++++++++++++++++
+ .../relation/predicate_builder/array_handler.rb    |  3 +-
+ 2 files changed, 45 insertions(+), 1 deletion(-)
+
+diff --git a/activerecord/lib/active_record/relation/predicate_builder/array_handler.rb b/activerecord/lib/active_record/relation/predicate_builder/array_handler.rb
+index fb08326..d4e74eb 100644
+--- a/activerecord/lib/active_record/relation/predicate_builder/array_handler.rb
++++ b/activerecord/lib/active_record/relation/predicate_builder/array_handler.rb
+@@ -14,7 +14,8 @@ module ActiveRecord
+             it for 'IN' conditions.
+           MSG
+ 
+-          values = values.flatten
++          flat_values = values.flatten
++          values = flat_values unless flat_values.include?(nil)
+         end
+ 
+         return attribute.in([]) if values.empty? && nils.empty?
+-- 
+2.8.1
+
