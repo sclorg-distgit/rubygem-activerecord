@@ -1,0 +1,51 @@
+commit 2c894cb3adb8f1c1f2653af05879a3e96d0add21
+Author: Rafael Sales <rafaelcds@gmail.com>
+Date:   Mon Oct 12 23:18:51 2015 -0300
+
+    Backport #21950 :
+    
+    Fix generated projection fields in group by query
+    
+    Closes #21922
+    
+    Let `Book(id, author_id)`, `Photo(id, book_id, author_id)` and `Author(id)`
+    
+    Running `Book.group(:author_id).joins(:photos).count` will produce:
+    
+    * Rails 4.2 - conflicts `author_id` in both projection and group by:
+    ```sql
+    SELECT COUNT(*) AS count_all, author_id AS author_id
+      FROM "books" INNER JOIN "photos" ON "photos"."book_id" = "books"."id"
+     GROUP BY author_id
+    ```
+    
+    * Master (9d02a25) - conflicts `author_id` only in projection:
+    ```sql
+    SELECT COUNT(*) AS count_all, author_id AS author_id
+      FROM "books" INNER JOIN "photos" ON "photos"."book_id" = "books"."id"
+     GROUP BY "books"."author_id"
+    ```
+    
+    * With this fix:
+    ```sql
+    SELECT COUNT(*) AS count_all, "books"."author_id" AS books_author_id
+      FROM "books" INNER JOIN "photos" ON "photos"."book_id" = "books"."id"
+     GROUP BY "books"."author_id"
+    ```
+
+diff --git a/activerecord/test/cases/calculations_test.rb b/activerecord/test/cases/calculations_test.rb
+index 4f77e97..bf0e83d 100644
+--- a/activerecord/test/cases/calculations_test.rb
++++ b/activerecord/test/cases/calculations_test.rb
+@@ -381,6 +381,11 @@ class CalculationsTest < ActiveRecord::TestCase
+     [1,6,2,9].each { |firm_id| assert c.keys.include?(firm_id) }
+   end
+ 
++  def test_should_count_field_of_root_table_with_conflicting_group_by_column
++    assert_equal({ 1 => 1 }, Firm.joins(:accounts).group(:firm_id).count)
++    assert_equal({ 1 => 1 }, Firm.joins(:accounts).group('accounts.firm_id').count)
++  end
++
+   def test_count_with_no_parameters_isnt_deprecated
+     assert_not_deprecated { Account.count }
+   end

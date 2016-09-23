@@ -8,7 +8,7 @@ Summary: Implements the ActiveRecord pattern for ORM
 Name: %{?scl_prefix}rubygem-%{gem_name}
 Epoch: 1
 Version: 4.2.5.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 Group: Development/Languages
 License: MIT
 URL: http://www.rubyonrails.org
@@ -21,6 +21,8 @@ Source1: activerecord-%{version}-tests.tgz
 Patch0: rubygem-activerecord-4.2.5.1-attr-dirty-dup.patch
 Patch1: rubygem-activerecord-4.2.5.1-attr-dirty-dup-tests.patch
 Patch2: 4-2-unsafe-query-generation.patch
+Patch3: rubygem-activerecord-4.2.5.1-group-by-ambiguity.patch
+Patch4: rubygem-activerecord-4.2.5.1-group-by-ambiguity-tests.patch
 Requires: %{?scl_prefix_ruby}ruby(release)
 Requires: %{?scl_prefix_ruby}ruby(rubygems)
 Requires: %{?scl_prefix}rubygem(activemodel) = %{version}
@@ -70,6 +72,7 @@ gem spec %{SOURCE0} -l --ruby > %{gem_name}.gemspec
 
 %patch0 -p2
 %patch2 -p2
+%patch3 -p2
 
 %build
 %{?scl:scl enable %{scl} - << \EOF}
@@ -88,6 +91,7 @@ pushd .%{gem_instdir}
 
 tar xzvf %{SOURCE1}
 patch -p2 < %{PATCH1}
+patch -p2 < %{PATCH4}
 
 # load_path is not available, remove its require.
 sed -i '1,2d' test/cases/helper.rb
@@ -138,6 +142,9 @@ popd
 %doc %{gem_instdir}/examples
 
 %changelog
+* Fri Sep 23 2016 Dominic Cleal <dominic@cleal.org> 4.2.5.1-4
+- Fix group_by column name ambiguities
+
 * Fri Aug 12 2016 Dominic Cleal <dominic@cleal.org> 4.2.5.1-3
 - Patch for CVE-2016-6317
 
