@@ -8,7 +8,7 @@ Summary: Implements the ActiveRecord pattern for ORM
 Name: %{?scl_prefix}rubygem-%{gem_name}
 Epoch: 1
 Version: 4.2.6
-Release: 2%{?dist}
+Release: 3%{?dist}
 Group: Development/Languages
 License: MIT
 URL: http://www.rubyonrails.org
@@ -18,6 +18,9 @@ Source0: http://rubygems.org/downloads/activerecord-%{version}.gem
 # git checkout v4.2.6
 # tar czvf activerecord-4.2.6-tests.tgz test/
 Source1: activerecord-%{version}-tests.tgz
+# Fix CVE-2016-6317 unsafe query generation in Active Record
+# https://bugzilla.redhat.com/show_bug.cgi?id=1365017
+Patch0: rubygem-activerecord-4.2.7.1-CVE-2016-6317-unsafe-query.patch
 
 Requires: %{?scl_prefix_ruby}ruby(release)
 Requires: %{?scl_prefix_ruby}ruby(rubygems)
@@ -64,6 +67,8 @@ gem unpack %{SOURCE0}
 gem spec %{SOURCE0} -l --ruby > %{gem_name}.gemspec
 %{?scl:EOF}
 
+%patch0 -p2
+
 %build
 %{?scl:scl enable %{scl} - << \EOF}
 gem build %{gem_name}.gemspec
@@ -86,10 +91,25 @@ sed -i '1,2d' test/cases/helper.rb
 # Fail with any test
 set -e
 
-# There is one more or N failures when requiring the tests in the following order.
-# Running them in complete isolation solves the problem but takes too much time.
-# So accepting up to 2 failures.
-ruby -I.:test:lib <<EOR | egrep 'assertions, (0|1|2) failures, (0|1) errors, 2 skips'
+# Disable unstable tests.
+sed -i '/^  def test_do_not_call_callbacks_for_delete_all$/,/^  end$/ s/^/#/' \
+  test/cases/associations/has_many_associations_test.rb
+sed -i '/^  def test_create_resets_cached_counters$/,/^  end$/ s/^/#/' \
+  test/cases/associations/has_many_associations_test.rb
+
+run_separately=(
+  associations/cascaded_eager_loading
+  associations/has_many_associations
+  associations/has_one_through_associations
+  associations/has_many_through_associations
+  autosave_association
+  calculations
+  core
+  reflection
+  nested_attributes
+)
+
+ruby -I.:test:lib <<EOR
   test_files = Dir.glob( "test/cases/**/*_test.rb" )
   test_files.reject! { |x| x =~ %r|/adapters/| }
 
@@ -101,10 +121,16 @@ ruby -I.:test:lib <<EOR | egrep 'assertions, (0|1|2) failures, (0|1) errors, 2 s
   test_files.delete('test/cases/session_store/session_test.rb')
 
   # Running separatelly works
-  test_files.delete('test/cases/calculations_test.rb')
+  test_files -= "${run_separately[@]}".split
+    .map { |test| "test/cases/#{test}_test.rb" }
 
   test_files.sort.each { |f| require f }
 EOR
+
+# Running separatelly
+for test in ${run_separately[@]} ; do
+  ruby -I.:test:lib "test/cases/${test}_test.rb"
+done
 
 popd
 %{?scl:EOF}
@@ -123,6 +149,11 @@ popd
 %doc %{gem_instdir}/examples
 
 %changelog
+* Wed Aug 17 2016 Jun Aruga <jaruga@redhat.com> - 1:4.2.6-3
+- Fix for CVE-2016-6317
+  Resolves: rhbz#1365017
+- Improve tests not to accept the failures
+
 * Fri Apr 08 2016 Pavel Valena <pvalena@redhat.com> - 1:4.2.6-2
 - Make build fail on tests failure
 - Lower accepted test failures to 2
